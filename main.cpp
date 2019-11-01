@@ -182,12 +182,16 @@ int main(void)
 	glBufferData(GL_ARRAY_BUFFER, nParticules * sizeof(Particule), particules.data(), GL_STATIC_DRAW);
 
 	// Bindings
-	const auto index = glGetAttribLocation(program, "position");
+	const auto posIndex = glGetAttribLocation(program, "position");
+	const auto colIndex = glGetAttribLocation(program, "color");
 
-	glVertexAttribPointer(index, 3, GL_FLOAT, GL_FALSE, sizeof(Particule), nullptr);
-	glEnableVertexAttribArray(index);
+	glVertexAttribPointer(posIndex, 3, GL_FLOAT, GL_FALSE, sizeof(Particule), nullptr);
+	glEnableVertexAttribArray(posIndex);
 
-	glPointSize(20.f);
+    glVertexAttribPointer(colIndex, 3, GL_FLOAT, GL_FALSE, sizeof(Particule), (void*) 12);
+    glEnableVertexAttribArray(colIndex);
+
+	glPointSize(10.f);
 
 	while (!glfwWindowShouldClose(window))
 	{
