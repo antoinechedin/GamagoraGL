@@ -25,6 +25,21 @@ configure_file(
         ${CMAKE_CURRENT_BINARY_DIR}
         COPYONLY
 )
+configure_file(
+        illidan.stl
+        ${CMAKE_CURRENT_BINARY_DIR}
+        COPYONLY
+)
+configure_file(
+        arthas.stl
+        ${CMAKE_CURRENT_BINARY_DIR}
+        COPYONLY
+)
+configure_file(
+        n64.stl
+        ${CMAKE_CURRENT_BINARY_DIR}
+        COPYONLY
+)
 
 add_library(glad glad/src/glad.c)
 

@@ -1,6 +1,8 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include <glm/vec3.hpp>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #include <vector>
 #include <iostream>
@@ -130,7 +132,7 @@ int main() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
     glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
 
-    window = glfwCreateWindow(640, 480, "Simple example", nullptr, nullptr);
+    window = glfwCreateWindow(512, 512, "Simple example", nullptr, nullptr);
 
     if (!window) {
         glfwTerminate();
@@ -150,7 +152,7 @@ int main() {
     // Callbacks
     glDebugMessageCallback(opengl_error_callback, nullptr);
 
-    const std::vector<Triangle> triangles = ReadStl("logo.stl");
+    const std::vector<Triangle> triangles = ReadStl("n64.stl");
 
     // Shader
     const auto vertex = MakeShader(GL_VERTEX_SHADER, "shader.vert");
@@ -177,29 +179,62 @@ int main() {
 
     // Bindings
     const auto posIndex = glGetAttribLocation(program, "position");
-    GLint logoScaleIdx = glGetUniformLocation(program, "logoScale");
-    glUniform1f(logoScaleIdx, 0.03f);
+    const auto normalLoc = glGetAttribLocation(program, "normal");
+    GLint modelLoc = glGetUniformLocation(program, "model");
+    GLint viewLoc = glGetUniformLocation(program, "view");
+    GLint projectionLoc = glGetUniformLocation(program, "projection");
 
     glVertexAttribPointer(
             posIndex,
             3,
             GL_FLOAT,
             GL_FALSE,
-            sizeof(glm::vec3),
+            sizeof(glm::vec3) * 2,
             nullptr
     );
     glEnableVertexAttribArray(posIndex);
 
+    glVertexAttribPointer(
+            normalLoc,
+            3,
+            GL_FLOAT,
+            GL_FALSE,
+            sizeof(glm::vec3) * 2,
+            (void *) sizeof(glm::vec3)
+    );
+    glEnableVertexAttribArray(normalLoc);
+
+    glEnable(GL_DEPTH_TEST);
+
+    int width, height;
+    glm::vec3 camPos(0, -20, 10);
+    float vfov = 45;
+
     int time = 0;
     while (!glfwWindowShouldClose(window)) {
-        float scale = 0.02f + 0.002f * float(sin(time/M_PI * 0.2f));
-        glUniform1f(logoScaleIdx, scale);
-
-        int width, height;
         glfwGetFramebufferSize(window, &width, &height);
 
+        float scale = 1;
+//        float scale = 1 + 0.001f * float(sin(time / M_PI * 0.2f));
+        float angle = float(2 * M_PI / 300 * time);
+
+        glm::mat4 view = glm::lookAt(camPos, glm::vec3(0), glm::vec3(0,0,1));
+        glm::mat4 projection = glm::perspective(glm::radians(vfov), float(width) / float(height), 0.1f, 100.f);
+
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::rotate(model, angle, glm::vec3(0, 0, 1));
+//        model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1, 0, 0));
+        model = glm::translate(model, glm::vec3(0, 0, -0.6f));
+        model = glm::scale(model, glm::vec3(scale));
+        //model = glm::rotate(model, angle / 10.3f, glm::vec3(1, 0, 0));
+
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+        glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
+
+
         glViewport(0, 0, width, height);
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         // glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
 
         glDrawArrays(GL_TRIANGLES, 0, triangles.size() * 3);

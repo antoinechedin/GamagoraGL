@@ -1,13 +1,15 @@
 #version 450
 
 in vec3 position;
+in vec3 normal;
+uniform mat4 model;
+uniform mat4 view;
+uniform mat4 projection;
 
-uniform float logoScale;
-
-out vec4 vertexColor;
+out vec3 outNormal;
 
 void main()
 {
-    gl_Position = vec4(position * logoScale, 1.0);
-    vertexColor = vec4(0.9, 0.5, 0.2, 1.0);
+    gl_Position = projection * view * model * vec4(position, 1.0);
+    outNormal = normal ;
 }
