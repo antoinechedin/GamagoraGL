@@ -12,6 +12,9 @@
 #include <string>
 
 #define TINYPLY_IMPLEMENTATION
+#define STB_IMAGE_IMPLEMENTATION
+
+#include "stb_image.h"
 
 #include <tinyply.h>
 #include "stl.h"
@@ -163,23 +166,79 @@ int main() {
     glUseProgram(program);
 
 
+    //Load texture
+    GLuint texture;
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    int width, height, nrChannels;
+    unsigned char *data = stbi_load(
+            "container.jpg",
+            &width,
+            &height,
+            &nrChannels,
+            0
+    );
+    if (data) {
+        glTexImage2D(
+                GL_TEXTURE_2D,
+                0,
+                GL_RGB,
+                width,
+                height,
+                0,
+                GL_RGB,
+                GL_UNSIGNED_BYTE,
+                data
+        );
+        glGenerateMipmap(GL_TEXTURE_2D);
+    } else {
+        std::cout << "Failed to load texture" << std::endl;
+    }
+    stbi_image_free(data);
+
+    float vertices[] = {
+            // positions          // colors           // texture coords
+            0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,   // top right
+            0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,   // bottom right
+            -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,   // bottom left
+            -0.5f, 0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f    // top left
+    };
+    unsigned int indices[] = {
+            0, 1, 3, // first triangle
+            1, 2, 3  // second triangle
+    };
+
     // Buffers
-    GLuint vbo, vao;
-    glGenBuffers(1, &vbo);
+    GLuint vbo, vao, ebo;
     glGenVertexArrays(1, &vao);
+    glGenBuffers(1, &vbo);
+    glGenBuffers(1, &ebo);
 
     glBindVertexArray(vao);
+
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferData(
             GL_ARRAY_BUFFER,
-            triangles.size() * sizeof(Triangle),
-            triangles.data(),
+            sizeof(vertices),
+            vertices,
+            GL_STATIC_DRAW
+    );
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+    glBufferData(
+            GL_ELEMENT_ARRAY_BUFFER,
+            sizeof(indices),
+            indices,
             GL_STATIC_DRAW
     );
 
     // Bindings
     const auto posIndex = glGetAttribLocation(program, "position");
     const auto normalLoc = glGetAttribLocation(program, "normal");
+    const auto texCoordLoc = glGetAttribLocation(program, "texCoord");
     GLint modelLoc = glGetUniformLocation(program, "model");
     GLint viewLoc = glGetUniformLocation(program, "view");
     GLint projectionLoc = glGetUniformLocation(program, "projection");
@@ -189,43 +248,59 @@ int main() {
             3,
             GL_FLOAT,
             GL_FALSE,
-            sizeof(glm::vec3) * 2,
+            8 * sizeof(float),
             nullptr
     );
     glEnableVertexAttribArray(posIndex);
-
     glVertexAttribPointer(
             normalLoc,
             3,
             GL_FLOAT,
             GL_FALSE,
-            sizeof(glm::vec3) * 2,
+            8 * sizeof(float),
             (void *) sizeof(glm::vec3)
     );
     glEnableVertexAttribArray(normalLoc);
+    glVertexAttribPointer(
+            texCoordLoc,
+            2,
+            GL_FLOAT,
+            GL_FALSE,
+            8 * sizeof(float),
+            (void *) (sizeof(glm::vec3) * 2)
+    );
+    glEnableVertexAttribArray(texCoordLoc);
 
     glEnable(GL_DEPTH_TEST);
 
-    int width, height;
-    glm::vec3 camPos(0, -20, 10);
+    int screenWidth, screenHeight;
+    glm::vec3 camPos(0, 0, -2);
     float vfov = 45;
-
     int time = 0;
     while (!glfwWindowShouldClose(window)) {
-        glfwGetFramebufferSize(window, &width, &height);
+        glfwGetFramebufferSize(window, &screenWidth, &screenHeight);
 
         float scale = 1;
 //        float scale = 1 + 0.001f * float(sin(time / M_PI * 0.2f));
         float angle = float(2 * M_PI / 300 * time);
 
-        glm::mat4 view = glm::lookAt(camPos, glm::vec3(0), glm::vec3(0,0,1));
-        glm::mat4 projection = glm::perspective(glm::radians(vfov), float(width) / float(height), 0.1f, 100.f);
+        glm::mat4 view = glm::lookAt(
+                camPos,
+                glm::vec3(0),
+                glm::vec3(0, 1, 0)
+        );
+        glm::mat4 projection = glm::perspective(
+                glm::radians(vfov),
+                float(screenWidth) / float(screenHeight),
+                0.1f,
+                100.f
+        );
 
         glm::mat4 model = glm::mat4(1.0f);
-        model = glm::rotate(model, angle, glm::vec3(0, 0, 1));
+        model = glm::rotate(model, angle, glm::vec3(0, 1, 0));
 //        model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1, 0, 0));
-        model = glm::translate(model, glm::vec3(0, 0, -0.6f));
-        model = glm::scale(model, glm::vec3(scale));
+//        model = glm::translate(model, glm::vec3(0, 0, -0.6f));
+//        model = glm::scale(model, glm::vec3(scale));
         //model = glm::rotate(model, angle / 10.3f, glm::vec3(1, 0, 0));
 
         glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
@@ -233,11 +308,12 @@ int main() {
         glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
 
 
-        glViewport(0, 0, width, height);
+        glViewport(0, 0, screenWidth, screenHeight);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         // glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
 
-        glDrawArrays(GL_TRIANGLES, 0, triangles.size() * 3);
+//        glDrawArrays(GL_TRIANGLES, 0, triangles.size() * 3);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
