@@ -57,7 +57,7 @@ std::vector<Particule> MakeParticules(const int n) {
     return p;
 }
 
-GLuint MakeShader(GLuint t, std::string path) {
+GLuint MakeShader(GLuint t, const std::string &path) {
     std::cout << path << std::endl;
     std::ifstream file(path.c_str(), std::ios::in);
     std::ostringstream contents;
@@ -88,7 +88,7 @@ GLuint MakeShader(GLuint t, std::string path) {
     return s;
 }
 
-GLuint AttachAndLink(std::vector<GLuint> shaders) {
+GLuint AttachAndLink(const std::vector<GLuint> &shaders) {
     const auto prg = glCreateProgram();
     for (const auto s : shaders) {
         glAttachShader(prg, s);
@@ -119,7 +119,7 @@ void APIENTRY opengl_error_callback(GLenum source,
     std::cout << message << std::endl;
 }
 
-int main(void) {
+int main() {
     GLFWwindow *window;
     glfwSetErrorCallback(error_callback);
 
@@ -130,7 +130,7 @@ int main(void) {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
     glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
 
-    window = glfwCreateWindow(640, 480, "Simple example", NULL, NULL);
+    window = glfwCreateWindow(640, 480, "Simple example", nullptr, nullptr);
 
     if (!window) {
         glfwTerminate();

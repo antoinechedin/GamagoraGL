@@ -1,14 +1,30 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.14)
 project(GamagoraGL)
 set(CMAKE_CXX_STANDARD 17)
 
-set(glfw3_DIR C:/Program\ Files\ \(x86\)/GLFW/lib/cmake/glfw3)
+set(glfw3_DIR GLFW/lib/cmake/glfw3)
 find_package(glfw3 3.3 REQUIRED)
 
 include_directories(glad/include)
 include_directories(CImg/include)
 include_directories(tinyply/include)
 include_directories(glm)
+
+configure_file(
+        shader.vert
+        ${CMAKE_CURRENT_BINARY_DIR}
+        COPYONLY
+)
+configure_file(
+        shader.frag
+        ${CMAKE_CURRENT_BINARY_DIR}
+        COPYONLY
+)
+configure_file(
+        logo.stl
+        ${CMAKE_CURRENT_BINARY_DIR}
+        COPYONLY
+)
 
 add_library(glad glad/src/glad.c)
 
