@@ -18,6 +18,7 @@
 
 #include <tinyply.h>
 #include "stl.h"
+#include "Shader.h"
 
 static void error_callback(int /*error*/, const char *description) {
     std::cerr << "Error: " << description << std::endl;
@@ -158,13 +159,8 @@ int main() {
     const std::vector<Triangle> triangles = ReadStl("n64.stl");
 
     // Shader
-    const auto vertex = MakeShader(GL_VERTEX_SHADER, "shader.vert");
-    const auto fragment = MakeShader(GL_FRAGMENT_SHADER, "shader.frag");
-
-    const auto program = AttachAndLink({vertex, fragment});
-
-    glUseProgram(program);
-
+    Shader program ("shader.vert", "shader.frag");
+    program.use();
 
     //Load texture
     GLuint texture;
@@ -236,12 +232,12 @@ int main() {
     );
 
     // Bindings
-    const auto posIndex = glGetAttribLocation(program, "position");
-    const auto normalLoc = glGetAttribLocation(program, "normal");
-    const auto texCoordLoc = glGetAttribLocation(program, "texCoord");
-    GLint modelLoc = glGetUniformLocation(program, "model");
-    GLint viewLoc = glGetUniformLocation(program, "view");
-    GLint projectionLoc = glGetUniformLocation(program, "projection");
+    const auto posIndex = glGetAttribLocation(program.ID, "position");
+    const auto normalLoc = glGetAttribLocation(program.ID, "normal");
+    const auto texCoordLoc = glGetAttribLocation(program.ID, "texCoords");
+    GLint modelLoc = glGetUniformLocation(program.ID, "model");
+    GLint viewLoc = glGetUniformLocation(program.ID, "view");
+    GLint projectionLoc = glGetUniformLocation(program.ID, "projection");
 
     glVertexAttribPointer(
             posIndex,
