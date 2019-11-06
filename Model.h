@@ -16,6 +16,7 @@ public:
 private:
     std::vector<Mesh> meshes;
     std::string directory;
+    std::vector<Texture> texturesLoaded;
 
     /*  Functions   */
     void loadModel(const std::string &path);
@@ -27,6 +28,10 @@ private:
     std::vector<Texture> loadMaterialTextures(aiMaterial *mat,
                                               aiTextureType type,
                                               std::string typeName
+    );
+
+    static unsigned int TextureFromFile(
+            const char *path, const std::string &directory
     );
 };
 
