@@ -5,14 +5,15 @@ set(CMAKE_CXX_STANDARD 17)
 set(glfw3_DIR GLFW/lib/cmake/glfw3)
 find_package(glfw3 3.3 REQUIRED)
 
-set(Assimp_DIR Assimp/lib/cmake/assimp-3.3)
-find_package(Assimp 3.3.1 REQUIRED)
+add_subdirectory(assimp-3.3.1)
+#set(Assimp_DIR Assimp/lib/cmake/assimp-3.3)
+#find_package(Assimp 3.3.1 REQUIRED)
 
 include_directories(glad/include)
 include_directories(CImg/include)
 include_directories(tinyply/include)
 include_directories(glm)
-include_directories(Assimp/include)
+include_directories(assimp-3.3.1/include)
 
 configure_file(
         shader.vert
@@ -47,5 +48,5 @@ configure_file(
 
 add_library(glad glad/src/glad.c)
 
-add_executable(GamagoraGL main.cpp stl.cpp Mesh.cpp Shader.cpp Model.cpp)
-target_link_libraries(GamagoraGL glfw glad)
+add_executable(GamagoraGL main.cpp stl.cpp Shader.cpp)
+target_link_libraries(GamagoraGL glfw glad )
