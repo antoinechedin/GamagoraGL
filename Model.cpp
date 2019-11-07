@@ -10,6 +10,7 @@ void Model::Draw(Shader shader) {
 }
 
 void Model::loadModel(const std::string &path) {
+    std::cout << "INFO:ASSIMP:LOADING:" << path << std::endl;
     Assimp::Importer import;
     const aiScene *scene = import.ReadFile(
             path, aiProcess_Triangulate | aiProcess_FlipUVs

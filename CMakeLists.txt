@@ -32,5 +32,5 @@ configure_file(container2_specular.png ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
 
 add_library(glad glad/src/glad.c)
 
-add_executable(GamagoraGL main.cpp stl.cpp Shader.cpp)
-target_link_libraries(GamagoraGL glfw glad)
+add_executable(GamagoraGL main.cpp stl.cpp Shader.cpp Mesh.cpp Model.cpp)
+target_link_libraries(GamagoraGL glfw glad assimp)
