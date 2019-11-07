@@ -14,8 +14,6 @@ add_subdirectory(assimp-3.3.1)
 #    set_target_properties(${ASSIMP_LIBRARY} PROPERTIES IMPORTED_LOCATION "${ASSIMP_LIBRARY_DIRS}/libassimp.dll")
 #endif(assimp_FOUND)
 
-add_subdirectory(assimp-4.1.0)
-
 include_directories(glad/include)
 include_directories(CImg/include)
 include_directories(tinyply/include)
@@ -29,6 +27,8 @@ configure_file(logo.stl ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
 configure_file(illidan.stl ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
 configure_file(arthas.stl ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
 configure_file(n64.stl ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
+configure_file(container2.png ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
+configure_file(container2_specular.png ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
 
 add_library(glad glad/src/glad.c)
 
