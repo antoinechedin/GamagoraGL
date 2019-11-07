@@ -250,7 +250,7 @@ int main() {
         //model = glm::rotate(model, angle / 10.3f, glm::vec3(1, 0, 0));
 
         // CLEAR
-        glClearColor(0.2f, 0.2f, 0.2f, 1);
+        glClearColor(0.05f, 0.05f, 0.05f, 1);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // BIND TEXTURES

@@ -18,7 +18,6 @@ private:
     std::string directory;
     std::vector<Texture> texturesLoaded;
 
-    /*  Functions   */
     void loadModel(const std::string &path);
 
     void processNode(aiNode *node, const aiScene *scene);
