@@ -7,7 +7,14 @@ find_package(glfw3 3.3 REQUIRED)
 
 add_subdirectory(assimp-3.3.1)
 #set(Assimp_DIR Assimp/lib/cmake/assimp-3.3)
-#find_package(Assimp 3.3.1 REQUIRED)
+#find_package(assimp REQUIRED)
+#if (assimp_FOUND)
+#    set(ASSIMP_LIBRARY "assimp")
+#    add_library(${ASSIMP_LIBRARY} SHARED IMPORTED)
+#    set_target_properties(${ASSIMP_LIBRARY} PROPERTIES IMPORTED_LOCATION "${ASSIMP_LIBRARY_DIRS}/libassimp.dll")
+#endif(assimp_FOUND)
+
+add_subdirectory(assimp-4.1.0)
 
 include_directories(glad/include)
 include_directories(CImg/include)
@@ -15,38 +22,15 @@ include_directories(tinyply/include)
 include_directories(glm)
 include_directories(assimp-3.3.1/include)
 
-configure_file(
-        shader.vert
-        ${CMAKE_CURRENT_BINARY_DIR}
-        COPYONLY
-)
-configure_file(
-        shader.frag
-        ${CMAKE_CURRENT_BINARY_DIR}
-        COPYONLY
-)
-configure_file(
-        logo.stl
-        ${CMAKE_CURRENT_BINARY_DIR}
-        COPYONLY
-)
-configure_file(
-        illidan.stl
-        ${CMAKE_CURRENT_BINARY_DIR}
-        COPYONLY
-)
-configure_file(
-        arthas.stl
-        ${CMAKE_CURRENT_BINARY_DIR}
-        COPYONLY
-)
-configure_file(
-        n64.stl
-        ${CMAKE_CURRENT_BINARY_DIR}
-        COPYONLY
-)
+
+configure_file(shader.vert ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
+configure_file(shader.frag ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
+configure_file(logo.stl ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
+configure_file(illidan.stl ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
+configure_file(arthas.stl ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
+configure_file(n64.stl ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
 
 add_library(glad glad/src/glad.c)
 
 add_executable(GamagoraGL main.cpp stl.cpp Shader.cpp)
-target_link_libraries(GamagoraGL glfw glad )
+target_link_libraries(GamagoraGL glfw glad)
