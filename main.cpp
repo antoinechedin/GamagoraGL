@@ -36,26 +36,26 @@ static void key_callback(GLFWwindow *window, int key, int /*scancode*/, int acti
 
 void APIENTRY
 opengl_error_callback(GLenum
-source,
-GLenum type,
-        GLuint
-id,
-GLenum severity,
-        GLsizei
-length,
-const GLchar *message,
-const void *userParam
+                      source,
+                      GLenum type,
+                      GLuint
+                      id,
+                      GLenum severity,
+                      GLsizei
+                      length,
+                      const GLchar *message,
+                      const void *userParam
 ) {
-std::cout << "ERROR:OPEN_GL:" << message <<
-std::endl;
+    std::cout << "ERROR:OPEN_GL:" << message <<
+              std::endl;
 }
 
 void processInput(GLFWwindow *window);
 
-glm::vec3 cameraPos(0, 0, 9);
-glm::vec3 cameraFront(0, 0, -1);
+glm::vec3 cameraPos(0, 3, 9);
+glm::vec3 cameraFront(0, -0.3f, -1);
 glm::vec3 cameraUp(0, 1, 0);
-float vfov = 45;
+float vfov = 60;
 
 
 int main() {
@@ -174,7 +174,7 @@ int main() {
     GLuint screenTextureDepth;
     glGenTextures(1, &screenTextureDepth);
     glBindTexture(GL_TEXTURE_2D, screenTextureDepth);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, 512, 512, 0,  GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, 512, 512, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, nullptr);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -198,38 +198,12 @@ int main() {
 //        model = glm::rotate(model, angle / 10.3f, glm::vec3(1, 0, 0));
 
         // DRAENEI RENDER
-                glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-        glClearColor(0.8f, 0.8f, 0.8f, 1);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glClearColor(0.2f, 0.2f, 0.2f, 1);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         //DRAENEI LIGHT
         program.setVec3("light.specular", 1, 1, 1);
         // DRAW DRAENEI
-        glm::vec3 dCameraPos(0, 0, 9);
-        glm::vec3 dCameraFront(0, 0, -1);
-        glm::vec3 dCameraUp(0, 1, 0);
-        glm::mat4 dViewTransform = glm::lookAt(dCameraPos, dCameraPos + dCameraFront, cameraUp);
-        program.setMat4("view", dViewTransform);
-        glm::mat4 dProjectionTransform = glm::perspective(
-                glm::radians(vfov),
-                float(screenWidth) / float(screenHeight),
-                0.1f,
-                100.f
-        );
-        program.setMat4("projection", dProjectionTransform);
-        float angle = float(M_PI) * float(glfwGetTime() / 5.0f);
-        glm::mat4 modelTransform = glm::mat4(1.0f);
-        modelTransform = glm::rotate(modelTransform, angle, glm::vec3(0, 1, 0));
-        modelTransform = glm::translate(modelTransform, glm::vec3(0, -2, 0));
-        program.setMat4("model", modelTransform);
-        draenei.Draw(program);
-
-        // SCREEN RENDER
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        glClearColor(0.2f, 0.2f, 0.2f, 1);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        //SCREEN LIGHT
-        program.setVec3("light.specular", 0, 0, 0);
-        // TRANSFORM SCREEN
         glm::mat4 viewTransform = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
         program.setMat4("view", viewTransform);
         glm::mat4 projectionTransform = glm::perspective(
@@ -239,16 +213,23 @@ int main() {
                 100.f
         );
         program.setMat4("projection", projectionTransform);
-        glm::mat4 screenTransform = glm::mat4(1.0f);
-        float screenAngle = glm::cos(float(glfwGetTime())) * float(M_PI) / 3.0f;
-        screenTransform = glm::rotate(screenTransform, screenAngle, glm::vec3(0, 1, 0));
-        screenTransform = glm::scale(screenTransform, glm::vec3(6, 6, 6));
-        program.setMat4("model", screenTransform);
-        // BIND SCREEN BUFFERS AND TEXTURE
+        float angle = float(M_PI) * float(glfwGetTime() / 5.0f);
+        glm::mat4 modelTransform = glm::mat4(1.0f);
+        modelTransform = glm::rotate(modelTransform, angle, glm::vec3(0, 1, 0));
+        modelTransform = glm::translate(modelTransform, glm::vec3(0, -2, 0));
+        program.setMat4("model", modelTransform);
+        draenei.Draw(program);
+
+        // DRAW GROUND
+        glm::mat4 groundTransform = glm::mat4(1.0f);
+        groundTransform = glm::translate(groundTransform, glm::vec3(0, -2.5, 0));
+        groundTransform = glm::scale(groundTransform, glm::vec3(20, 20, 20));
+        groundTransform = glm::rotate(groundTransform, glm::radians(90.0f), glm::vec3(1, 0, 0));
+        program.setMat4("model", groundTransform);
         glBindVertexArray(VAO);
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, screenTexture);
-        // DRAW SCREEN
+        glBindTexture(GL_TEXTURE_2D, diffuseMap);
+        // DRAW GROUND
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
         // FINISH
