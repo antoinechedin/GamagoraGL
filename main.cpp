@@ -46,7 +46,7 @@ void APIENTRY opengl_error_callback(GLenum source,
 
 void processInput(GLFWwindow *window);
 
-glm::vec3 cameraPos(0, 0, 8);
+glm::vec3 cameraPos(0, 0, 9);
 glm::vec3 cameraFront(0, 0, -1);
 glm::vec3 cameraUp(0, 1, 0);
 float vfov = 45;
@@ -90,16 +90,16 @@ int main() {
 
     // LIGHT
     program.setVec3("viewPosition", cameraPos);
-    program.setVec3("light.position", 0, 5, 0);
+    program.setVec3("light.position", 5, 5, 5);
 
-    program.setVec3("light.ambient", 0.2f, 0.2f, 0.2f);
-    program.setVec3("light.diffuse", 0.5f, 0.5f, 0.5f);
+    program.setVec3("light.ambient", 0.8, 0.8, 0.8);
+    program.setVec3("light.diffuse", 0.5, 0.5, 0.5);
     program.setVec3("light.specular", 1, 1, 1);
 
     // MATERIAL
 //    program.setInt("material.diffuse", 0);
 //    program.setInt("material.specular", 1);
-    program.setFloat("material.shininess", 32.0f);
+    program.setFloat("material.shininess", 4.0f);
 
 
     glEnable(GL_DEPTH_TEST);
@@ -130,7 +130,7 @@ int main() {
 //        model = glm::rotate(model, angle / 10.3f, glm::vec3(1, 0, 0));
 
         // CLEAR
-        glClearColor(0.05f, 0.05f, 0.05f, 1);
+        glClearColor(0.8f, 0.8f, 0.8f, 1);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // DRAW
