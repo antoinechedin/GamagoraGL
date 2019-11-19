@@ -92,6 +92,9 @@ int main() {
     // SET UP SHADER PROGRAM
     Shader program("shader.vert", "shader.frag");
     program.use();
+    program.setInt("material.texture_diffuse1", 0);
+    program.setInt("material.texture_specular1", 1);
+    program.setInt("shadowMap", 2);
 
     // MODEL
     Model draenei("warcraft-draenei-fanart/untitled.obj");
@@ -154,8 +157,8 @@ int main() {
     program.setVec3("viewPosition", cameraPos);
     program.setVec3("light.position", lightPos);
 
-    program.setVec3("light.ambient", 0.8, 0.8, 0.8);
-    program.setVec3("light.diffuse", 0.5, 0.5, 0.5);
+    program.setVec3("light.ambient", 0.4, 0.4, 0.4);
+    program.setVec3("light.diffuse", 0.9, 0.9, 0.9);
     program.setVec3("light.specular", 1, 1, 1);
 
     // MATERIAL
@@ -171,8 +174,8 @@ int main() {
     glBindTexture(GL_TEXTURE_2D, depthTexture);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, shadowSize, shadowSize, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE,
                  nullptr);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     // FRAMEBUFFER TEXTURE
@@ -204,15 +207,17 @@ int main() {
         glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
         glClear(GL_DEPTH_BUFFER_BIT);
         // DEPTH PROJECTION
-        glm::mat4 lightTransform = glm::lookAt(lightPos, lightPos + glm::normalize(lightFront), lightUp);
-        glm::mat4 lightProjectionTransform = glm::perspective(
-                glm::radians(65.0f),
+        glm::mat4 lightView = glm::lookAt(lightPos, lightPos + glm::normalize(lightFront), lightUp);
+        glm::mat4 lightProjection = glm::perspective(
+                glm::radians(75.0f),
                 float(screenWidth) / float(screenHeight),
                 0.1f,
                 100.f
         );
-        program.setMat4("view", lightTransform);
-        program.setMat4("projection", lightProjectionTransform);
+        glm::mat4 lightSpaceMatrix = lightProjection * lightView;
+        program.setMat4("view", lightView);
+        program.setMat4("projection", lightProjection);
+        program.setMat4("lightSpaceMatrix", lightSpaceMatrix);
         // DRAENEI
         program.setMat4("model", draeneiTransform);
         draenei.Draw(program);
@@ -225,6 +230,7 @@ int main() {
 
 
         // SCENE RENDER
+        glViewport(0, 0, screenWidth, screenHeight);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glClearColor(0.2f, 0.2f, 0.2f, 1);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -238,6 +244,9 @@ int main() {
         );
         program.setMat4("view", viewTransform);
         program.setMat4("projection", projectionTransform);
+        // SET SHADOW MAP
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, depthTexture);
         // DRAENEI
         program.setMat4("model", draeneiTransform);
         draenei.Draw(program);

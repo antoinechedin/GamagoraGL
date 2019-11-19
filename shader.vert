@@ -7,16 +7,23 @@ layout (location = 2) in vec2 inTexCoord;
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
+uniform mat4 lightSpaceMatrix;
 
-out vec3 fragPosition;
-out vec3 normal;
-out vec2 texCoord;
+struct VS_OUT {
+    vec3 fragPos;
+    vec3 normal;
+    vec2 texCoord;
+    vec4 fragPosLightSpace;
+};
+
+out VS_OUT vsOut;
 
 void main()
 {
-    fragPosition = vec3(model * vec4(inPosition, 1.0));
-    normal = mat3(transpose(inverse(model))) * inNormal ;
-    texCoord = inTexCoord;
+    vsOut.fragPos = vec3(model * vec4(inPosition, 1.0));
+    vsOut.normal = mat3(transpose(inverse(model))) * inNormal;
+    vsOut.texCoord = inTexCoord;
+    vsOut.fragPosLightSpace = lightSpaceMatrix * vec4(vsOut.fragPos, 1.0);
 
-    gl_Position = projection * view * vec4(fragPosition, 1.0);
+    gl_Position = projection * view * vec4(vsOut.fragPos, 1.0);
 }
