@@ -52,6 +52,8 @@ opengl_error_callback(GLenum
 
 void processInput(GLFWwindow *window);
 
+void renderScene();
+
 glm::vec3 cameraPos(0, 3, 9);
 glm::vec3 cameraFront(0, -0.3f, -1);
 glm::vec3 cameraUp(0, 1, 0);
@@ -68,7 +70,7 @@ int main() {
     // glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
 
-    GLFWwindow *window = glfwCreateWindow(512, 512, "OpenGL", nullptr, nullptr);
+    GLFWwindow *window = glfwCreateWindow(1024, 1024, "OpenGL", nullptr, nullptr);
     if (!window) {
         std::cout << "ERROR:GLFW:CREATE_WINDOW" << std::endl;
         glfwTerminate();
@@ -146,8 +148,11 @@ int main() {
     stbi_image_free(data);
 
     // LIGHT
+    glm::vec3 lightPos(5, 5, 5);
+    glm::vec3 lightFront(-1, -1, -1);
+    glm::vec3 lightUp(0, 1, 0);
     program.setVec3("viewPosition", cameraPos);
-    program.setVec3("light.position", 5, 5, 5);
+    program.setVec3("light.position", lightPos);
 
     program.setVec3("light.ambient", 0.8, 0.8, 0.8);
     program.setVec3("light.diffuse", 0.5, 0.5, 0.5);
@@ -158,32 +163,23 @@ int main() {
 //    program.setInt("material.specular", 1);
     program.setFloat("material.shininess", 4.0f);
 
-    // FRAMEBUFFER
-    GLuint fbo;
-    glGenFramebuffers(1, &fbo);
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+    // SHADOW MAP
+    int shadowSize = 1024;
+    // SHADOW MAP TEXTURE
+    GLuint depthTexture;
+    glGenTextures(1, &depthTexture);
+    glBindTexture(GL_TEXTURE_2D, depthTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, shadowSize, shadowSize, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE,
+                 nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     // FRAMEBUFFER TEXTURE
-    GLuint screenTexture;
-    glGenTextures(1, &screenTexture);
-    glBindTexture(GL_TEXTURE_2D, screenTexture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 512, 512, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    GLuint screenTextureDepth;
-    glGenTextures(1, &screenTextureDepth);
-    glBindTexture(GL_TEXTURE_2D, screenTextureDepth);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, 512, 512, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, nullptr);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    // ATTACH TEXTURE
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, screenTexture, 0);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, screenTextureDepth, 0);
-
-
+    GLuint depthMapFBO;
+    glGenFramebuffers(1, &depthMapFBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTexture, 0);
 
     // WHILE LOOP
     glEnable(GL_DEPTH_TEST);
@@ -192,45 +188,66 @@ int main() {
         glfwGetFramebufferSize(window, &screenWidth, &screenHeight);
         processInput(window);
 
-//        model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1, 0, 0));
-//        model = glm::translate(model, glm::vec3(0, 0, -0.6f));
-//        model = glm::scale(model, glm::vec3(scale));
-//        model = glm::rotate(model, angle / 10.3f, glm::vec3(1, 0, 0));
+        // GLOBAL TRANSFORMS
+        float angle = float(M_PI) * float(glfwGetTime() / 5.0f);
+        glm::mat4 draeneiTransform = glm::mat4(1.0f);
+        draeneiTransform = glm::rotate(draeneiTransform, angle, glm::vec3(0, 1, 0));
+        draeneiTransform = glm::translate(draeneiTransform, glm::vec3(0, -2, 0));
 
-        // DRAENEI RENDER
+        glm::mat4 groundTransform = glm::mat4(1.0f);
+        groundTransform = glm::translate(groundTransform, glm::vec3(0, -2.5, 0));
+        groundTransform = glm::scale(groundTransform, glm::vec3(20, 20, 20));
+        groundTransform = glm::rotate(groundTransform, glm::radians(90.0f), glm::vec3(1, 0, 0));
+
+        // RENDER DEPTH MAP
+        glViewport(0, 0, shadowSize, shadowSize);
+        glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+        glClear(GL_DEPTH_BUFFER_BIT);
+        // DEPTH PROJECTION
+        glm::mat4 lightTransform = glm::lookAt(lightPos, lightPos + glm::normalize(lightFront), lightUp);
+        glm::mat4 lightProjectionTransform = glm::perspective(
+                glm::radians(65.0f),
+                float(screenWidth) / float(screenHeight),
+                0.1f,
+                100.f
+        );
+        program.setMat4("view", lightTransform);
+        program.setMat4("projection", lightProjectionTransform);
+        // DRAENEI
+        program.setMat4("model", draeneiTransform);
+        draenei.Draw(program);
+        // GROUND
+        program.setMat4("model", groundTransform);
+        glBindVertexArray(VAO);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, diffuseMap);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+
+
+        // SCENE RENDER
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glClearColor(0.2f, 0.2f, 0.2f, 1);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        //DRAENEI LIGHT
-        program.setVec3("light.specular", 1, 1, 1);
-        // DRAW DRAENEI
-        glm::mat4 viewTransform = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
-        program.setMat4("view", viewTransform);
+        // SCENE PROJECTION
+        glm::mat4 viewTransform = glm::lookAt(cameraPos, cameraPos + glm::normalize(cameraFront), cameraUp);
         glm::mat4 projectionTransform = glm::perspective(
                 glm::radians(vfov),
                 float(screenWidth) / float(screenHeight),
                 0.1f,
                 100.f
         );
+        program.setMat4("view", viewTransform);
         program.setMat4("projection", projectionTransform);
-        float angle = float(M_PI) * float(glfwGetTime() / 5.0f);
-        glm::mat4 modelTransform = glm::mat4(1.0f);
-        modelTransform = glm::rotate(modelTransform, angle, glm::vec3(0, 1, 0));
-        modelTransform = glm::translate(modelTransform, glm::vec3(0, -2, 0));
-        program.setMat4("model", modelTransform);
+        // DRAENEI
+        program.setMat4("model", draeneiTransform);
         draenei.Draw(program);
-
         // DRAW GROUND
-        glm::mat4 groundTransform = glm::mat4(1.0f);
-        groundTransform = glm::translate(groundTransform, glm::vec3(0, -2.5, 0));
-        groundTransform = glm::scale(groundTransform, glm::vec3(20, 20, 20));
-        groundTransform = glm::rotate(groundTransform, glm::radians(90.0f), glm::vec3(1, 0, 0));
         program.setMat4("model", groundTransform);
         glBindVertexArray(VAO);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, diffuseMap);
-        // DRAW GROUND
         glDrawArrays(GL_TRIANGLES, 0, 6);
+
 
         // FINISH
         glfwSwapBuffers(window);
