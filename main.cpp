@@ -63,7 +63,10 @@ glm::vec3 cameraPos(0, 0, 10);
 glm::vec3 cameraFront(0, 0, -1);
 glm::vec3 cameraUp(0, 1, 0);
 float vfov = 60;
+
 std::default_random_engine randomEngine;
+float deltaTime = 0.0f;
+float lastFrame = 0.0f;
 
 int main() {
     // SET UP GLFW
@@ -177,6 +180,9 @@ int main() {
     glEnable(GL_DEPTH_TEST);
     int screenWidth, screenHeight;
     while (!glfwWindowShouldClose(window)) {
+        float currentFrame = float(glfwGetTime());
+        deltaTime = currentFrame - lastFrame;
+        lastFrame = currentFrame;
         glfwGetFramebufferSize(window, &screenWidth, &screenHeight);
         processInput(window);
 
@@ -235,7 +241,7 @@ std::vector<Particle> genRandomParticles(
 void processInput(GLFWwindow *window) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
-    float cameraSpeed = 0.07f; // adjust accordingly
+    float cameraSpeed = 5.0f * deltaTime; // adjust accordingly
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
         cameraPos += cameraSpeed * cameraFront;
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
@@ -244,4 +250,8 @@ void processInput(GLFWwindow *window) {
         cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+    if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
+        cameraPos -= cameraUp * cameraSpeed;
+    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+        cameraPos += cameraUp * cameraSpeed;
 }
