@@ -21,8 +21,10 @@ include_directories(glm)
 include_directories(assimp-3.3.1/include)
 
 
-configure_file(shader.vert ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
-configure_file(shader.frag ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
+configure_file(meshShader.vert ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
+configure_file(meshShader.frag ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
+configure_file(particleShader.vert ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
+configure_file(particleShader.frag ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
 configure_file(logo.stl ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
 configure_file(illidan.stl ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
 configure_file(arthas.stl ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
@@ -32,5 +34,5 @@ configure_file(container2_specular.png ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
 
 add_library(glad glad/src/glad.c)
 
-add_executable(GamagoraGL main.cpp stl.cpp Shader.cpp Mesh.cpp Model.cpp)
-target_link_libraries(GamagoraGL glfw glad assimp)
+add_executable(GamagoraGL main.cpp stl.cpp Shader.cpp Particle.cpp)
+target_link_libraries(GamagoraGL glfw glad)
